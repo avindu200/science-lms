@@ -1,0 +1,14 @@
+# Ignore Node Modules (These are too large)
+backend/node_modules/
+frontend/node_modules/
+
+# Ignore Environment Variables (Contains private database passwords)
+backend/.env
+frontend/.env
+
+# Ignore React Build files
+frontend/dist/
+frontend/build/
+
+# Ignore macOS system files
+.DS_Store
