@@ -5,6 +5,7 @@ import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard'; // <-- අලුතෙන් එකතු කළා
 import AdminDashboard from './pages/AdminDashboard';     // <-- අලුතෙන් එකතු කළා
+import LandingPage from './pages/LandingPage';
 
 // 🔒 Student Route Guard
 const StudentProtectedRoute = ({ children }) => {
@@ -31,6 +32,7 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<StudentLogin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/register" element={<Register />} />
