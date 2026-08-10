@@ -115,7 +115,7 @@ function LandingPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <h5 className="text-2xl font-black text-white">800+</h5>
+                    <h5 className="text-2xl font-black text-white">30+</h5>
                     <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">සක්‍රීය සිසුන්</span>
                   </div>
                   <div className="text-center">
@@ -147,7 +147,7 @@ function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Beaker, title: 'ප්‍රායෝගික පරීක්ෂණ', desc: 'පාඩම් වලට අදාළ සියලුම රසායනික හා භෞතික විද්‍යා පරීක්ෂණ ප්‍රායෝගිකව සහ දෘශ්‍ය මාධ්‍ය ඇසුරින් උගන්වයි.' },
+              { icon: Beaker, title: 'ප්‍රායෝගික පරීක්ෂණ', desc: 'පාඩම් වලට අදාළ සියලුම පරීක්ෂණ ප්‍රායෝගිකව සහ දෘශ්‍ය මාධ්‍ය ඇසුරින් උගන්වයි.' },
               { icon: BookOpen, title: 'ප්‍රශ්න පත්‍ර සාකච්ඡාව', desc: 'වාර පරීක්ෂණ, පසුගිය විභාග ප්‍රශ්න පත්‍ර සහ ආදර්ශ ප්‍රශ්න පත්‍ර කල්තියා සාකච්ඡා කර විභාගයට බිය නැති කරයි.' },
               { icon: Award, title: 'LMS Progress Tracker', desc: 'ළමයාගේ ලකුණු ප්‍රස්ථාර live පෙන්වීම සහ දුර්වල තැන් හඳුනාගෙන ඒවාට විශේෂ මඟපෙන්වීම් ලබාදෙයි.' }
             ].map((feat, idx) => {
