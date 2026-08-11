@@ -105,14 +105,31 @@ router.post('/add-homework', verifyAdmin, async (req, res) => {
 // 4. TEST MARKS ENTRY (ලකුණු ඇතුලත් කිරීම)
 // ==========================================
 
+// backend/routes/admin.js හි /add-marks route එක මේ විදිහට UPDATE කරන්න:
 router.post('/add-marks', verifyAdmin, async (req, res) => {
     const { studentId, testName, marks } = req.body;
 
     try {
+        // 1. ලකුණු ටික ඇතුලත් කිරීම
         await db.query(
             'INSERT INTO test_marks (student_id, test_name, marks) VALUES ($1, $2, $3)',
             [studentId, testName, marks]
         );
+
+        // 🌟 2. AUTOMATIC BADGE LOGIC (ළමයා ලකුණු 95+ ගත්තොත් පදක්කමක් දීම)
+        if (marks >= 95) {
+            await db.query(`
+                INSERT INTO student_badges (student_id, badge_name, badge_desc, badge_icon)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (student_id, badge_name) DO NOTHING
+            `, [
+                studentId, 
+                'Science Einstein ⚡', 
+                `Scored an amazing ${marks}% on ${testName}!`, 
+                'Zap'
+            ]);
+        }
+
         res.status(201).json({ message: "Marks added successfully!" });
     } catch (err) {
         res.status(500).json({ error: err.message });

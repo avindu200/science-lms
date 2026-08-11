@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   BookOpen, FileText, Bell, Award, CheckCircle, Clock, 
-  CreditCard, LogOut, Download, Send, Calendar, User, TrendingUp 
+  CreditCard, LogOut, Download, Send, Calendar, User, TrendingUp, 
+  Beaker
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import PeriodicTable from './PeriodicTable';
 
 function StudentDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -22,6 +24,7 @@ function StudentDashboard() {
   const [slipFile, setSlipFile] = useState(null);
   const [paymentMonth, setPaymentMonth] = useState('October 2024');
   const navigate = useNavigate();
+  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     setUserName(localStorage.getItem('userName') || 'Student');
@@ -56,6 +59,10 @@ function StudentDashboard() {
       // Marks for Chart
       const marksRes = await axios.get('http://localhost:5001/api/student/my-marks', config);
       setMyMarks(marksRes.data);
+
+      // fetchDashboardData ඇතුලට (70 වැනි පේළිය අවට) මෙය එකතු කරන්න:
+      const badgesRes = await axios.get('http://localhost:5001/api/student/my-badges', config);
+      setBadges(badgesRes.data);
 
     } catch (err) {
       console.error("Error loading dashboard data", err);
@@ -151,10 +158,13 @@ function StudentDashboard() {
     }
   };
 
+ 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
+
+  
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-slate-800 font-sans">
@@ -172,10 +182,13 @@ function StudentDashboard() {
 
           <nav className="space-y-1">
             {[
-              { id: 'dashboard', label: 'Overview', icon: BookOpen },
-              { id: 'papers', label: 'Class Papers', icon: FileText },
-              { id: 'homeworks', label: 'Homeworks', icon: Clock },
-              { id: 'fees', label: 'Class Fees', icon: CreditCard },
+               // Sidebar tabs map එක ඇතුලට මෙය දාන්න:
+                { id: 'dashboard', label: 'Overview', icon: BookOpen },
+                { id: 'papers', label: 'Class Papers', icon: FileText },
+                { id: 'homeworks', label: 'Homeworks', icon: Clock },
+                { id: 'periodic', label: 'Periodic Table', icon: Beaker }, 
+                { id: 'fees', label: 'Class Fees', icon: CreditCard },
+
             ].map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -274,6 +287,7 @@ function StudentDashboard() {
                 </div>
               </div>
 
+ 
               {/* Right Column (Sidebar Widgets) */}
               <div className="space-y-8">
                 
@@ -423,6 +437,12 @@ function StudentDashboard() {
               </div>
             </div>
           )}
+
+          
+            {/* TAB: PERIODIC TABLE (NEW) */}
+            {activeTab === 'periodic' && (
+              <PeriodicTable />
+            )}
 
         </div>
       </main>

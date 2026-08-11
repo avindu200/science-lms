@@ -24,10 +24,10 @@ function LandingPage() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
-            <a href="#home" className="hover:text-emerald-400 transition">ප්‍රධාන පිටුව</a>
-            <a href="#process" className="hover:text-emerald-400 transition">අපේ ක්‍රියාවලිය</a>
-            <a href="#about" className="hover:text-emerald-400 transition">දෙනුවන් සර් ගැන</a>
-            <a href="#contact" className="hover:text-emerald-400 transition">සම්බන්ධතා</a>
+            <a href="#home" className="hover:text-emerald-400 transition"> Home</a>
+            <a href="#process" className="hover:text-emerald-400 transition">Our Process</a>
+            <a href="#about" className="hover:text-emerald-400 transition">About sir</a>
+            <a href="#contact" className="hover:text-emerald-400 transition">Contact</a>
           </nav>
 
           {/* Login Button */}

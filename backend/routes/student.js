@@ -204,4 +204,19 @@ router.get('/announcements', verifyToken, async (req, res) => {
     }
 });
 
+// backend/routes/student.js පතුලටම දාන්න:
+
+// 🎖️ GET STUDENT BADGES (ළමයාට ලැබී ඇති පදක්කම් ගැනීම)
+router.get('/my-badges', verifyToken, async (req, res) => {
+    try {
+        const result = await db.query(
+            "SELECT badge_name, badge_desc, badge_icon, awarded_at FROM student_badges WHERE student_id = $1 ORDER BY awarded_at DESC",
+            [req.user.id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
