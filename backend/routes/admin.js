@@ -42,8 +42,9 @@ router.put('/decide-student/:id', verifyAdmin, async (req, res) => {
 // 2. PAPERS UPLOAD (පේපර්ස් Storage එකට දැමීම)
 // ==========================================
 
+// backend/routes/admin.js හි /upload-paper route එක මේ විදිහට UPDATE කරන්න:
 router.post('/upload-paper', verifyAdmin, upload.single('paperFile'), async (req, res) => {
-    const { title, grade, paperType } = req.body;
+    const { title, grade, category, term } = req.body; // category සහ term ලබා ගැනීම
     const file = req.file;
 
     if (!file) {
@@ -51,11 +52,10 @@ router.post('/upload-paper', verifyAdmin, upload.single('paperFile'), async (req
     }
 
     try {
-        // Supabase Storage එකට File එක upload කිරීමේදී හැදෙන අද්විතීය නම
         const fileName = `${Date.now()}_${file.originalname}`;
         
         const { data, error } = await supabase.storage
-            .from('lms-files') // අපේ Bucket නම
+            .from('lms-files')
             .upload(`papers/${fileName}`, file.buffer, {
                 contentType: file.mimetype,
                 duplex: 'half'
@@ -63,17 +63,18 @@ router.post('/upload-paper', verifyAdmin, upload.single('paperFile'), async (req
 
         if (error) throw error;
 
-        // Upload වුණු file එකේ Public URL එක ලබා ගැනීම
         const { data: publicUrlData } = supabase.storage
             .from('lms-files')
             .getPublicUrl(`papers/${fileName}`);
 
         const fileUrl = publicUrlData.publicUrl;
 
-        // Database එකට සේව් කිරීම
+        // Database එකට අලුත් columns සමඟ සේව් කිරීම (Past Paper එකක් නම් term එක NULL වේ)
+        const paperTerm = category === 'past_paper' ? null : parseInt(term);
+
         await db.query(
-            'INSERT INTO papers (title, grade, paper_type, file_url) VALUES ($1, $2, $3, $4)',
-            [title, grade, paperType, fileUrl]
+            'INSERT INTO papers (title, grade, category, term, file_url) VALUES ($1, $2, $3, $4, $5)',
+            [title, grade, category, paperTerm, fileUrl]
         );
 
         res.status(201).json({ message: "Paper uploaded and saved successfully!", url: fileUrl });

@@ -26,13 +26,23 @@ router.get('/profile', verifyToken, async (req, res) => {
 // ==========================================
 // 2. GET PAPERS BY GRADE (ළමයාගේ පන්තියට අදාළ පේපර්ස් පමණක් ගැනීම)
 // ==========================================
+// backend/routes/student.js හි /papers route එක මේ විදිහට UPDATE කරන්න:
 router.get('/papers', verifyToken, async (req, res) => {
     try {
-        // req.user.grade එකෙන් ලොග් වෙලා ඉන්න ළමයාගේ පන්තිය ඔටෝමැටිකලි ගන්නවා
-        const result = await db.query(
-            "SELECT * FROM papers WHERE grade = $1 ORDER BY uploaded_at DESC",
-            [req.user.grade]
-        );
+        let queryText;
+        let queryParams;
+
+        if (req.user.grade === 11) {
+            // Grade 11 සිසුන්ට සියලුම වර්ගයේ පේපර්ස් පෙනේ
+            queryText = "SELECT * FROM papers WHERE grade = $1 ORDER BY uploaded_at DESC";
+            queryParams = [req.user.grade];
+        } else {
+            // Grades 6-10 සිසුන්ට Past Papers බ්ලොක් කර, School සහ Provincial පේපර්ස් පමණක් පෙන්වයි
+            queryText = "SELECT * FROM papers WHERE grade = $1 AND category != 'past_paper' ORDER BY uploaded_at DESC";
+            queryParams = [req.user.grade];
+        }
+
+        const result = await db.query(queryText, queryParams);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });

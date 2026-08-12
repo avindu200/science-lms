@@ -1,14 +1,12 @@
-// frontend/src/pages/StudentDashboard.jsx
+// frontend/src/pages/StudentDashboard.jsx (HIGH-FIDELITY SUB-PAGES PAPERS UX)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   BookOpen, FileText, Bell, Award, CheckCircle, Clock, 
-  CreditCard, LogOut, Download, Send, Calendar, User, TrendingUp, 
-  Beaker
+  CreditCard, LogOut, Download, Send, Calendar, User, TrendingUp, Beaker, ChevronLeft, ArrowRight
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import PeriodicTable from './PeriodicTable';
 
 function StudentDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -19,12 +17,18 @@ function StudentDashboard() {
   const [papers, setPapers] = useState([]);
   const [homeworks, setHomeworks] = useState([]);
   const [myMarks, setMyMarks] = useState([]);
+  const [badges, setBadges] = useState([]);
   const [uploadingHwId, setUploadingHwId] = useState(null);
   const [hwFile, setHwFile] = useState(null);
   const [slipFile, setSlipFile] = useState(null);
   const [paymentMonth, setPaymentMonth] = useState('October 2024');
+
+  // 🌟 NEW: Papers View States for Sub-Pages UX
+  const [papersSubView, setPapersSubView] = useState('categories'); // 'categories', 'terms', 'list'
+  const [selectedCategory, setSelectedCategory] = useState(''); // 'school_paper', 'provincial_paper', 'past_paper'
+  const [selectedTerm, setSelectedTerm] = useState(null); // 1, 2, 3
+
   const navigate = useNavigate();
-  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     setUserName(localStorage.getItem('userName') || 'Student');
@@ -36,31 +40,24 @@ function StudentDashboard() {
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
     try {
-      // Profile details
       const profileRes = await axios.get('http://localhost:5001/api/student/profile', config);
       setStudentGrade(profileRes.data.grade);
 
-      // Announcements
       const announceRes = await axios.get('http://localhost:5001/api/student/announcements', config);
       setAnnouncements(announceRes.data);
 
-      // Leaderboard
       const leaderRes = await axios.get('http://localhost:5001/api/student/leaderboard', config);
       setLeaderboard(leaderRes.data);
 
-      // Papers
       const papersRes = await axios.get('http://localhost:5001/api/student/papers', config);
       setPapers(papersRes.data);
 
-      // Homeworks
       const hwRes = await axios.get('http://localhost:5001/api/student/homeworks', config);
       setHomeworks(hwRes.data);
 
-      // Marks for Chart
       const marksRes = await axios.get('http://localhost:5001/api/student/my-marks', config);
       setMyMarks(marksRes.data);
 
-      // fetchDashboardData ඇතුලට (70 වැනි පේළිය අවට) මෙය එකතු කරන්න:
       const badgesRes = await axios.get('http://localhost:5001/api/student/my-badges', config);
       setBadges(badgesRes.data);
 
@@ -69,34 +66,6 @@ function StudentDashboard() {
     }
   };
 
-  // Live Homework Countdown Timer Component
-  const HomeworkTimer = ({ deadline }) => {
-    const [timeLeft, setTimeLeft] = useState('');
-    useEffect(() => {
-      const interval = setInterval(() => {
-        const diff = +new Date(deadline) - +new Date();
-        if (diff <= 0) {
-          setTimeLeft("Expired");
-          clearInterval(interval);
-        } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-          const mins = Math.floor((diff / 1000 / 60) % 60);
-          setTimeLeft(`${days}d ${hours}h ${mins}m`);
-        }
-      }, 1000);
-      return () => clearInterval(interval);
-    }, [deadline]);
-
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${timeLeft === 'Expired' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
-        <Clock className="w-3.5 h-3.5" />
-        {timeLeft}
-      </span>
-    );
-  };
-
-  // Download PDF Direct Function (Using Blob for premium download experience)
   const handleDownload = async (url, title) => {
     try {
       const response = await axios({
@@ -112,12 +81,11 @@ function StudentDashboard() {
       link.click();
       link.parentNode.removeChild(link);
     } catch (err) {
-      alert("Download failed. Opening in new tab instead.");
+      alert("Opening in new tab instead.");
       window.open(url, '_blank');
     }
   };
 
-  // Submit Homework File
   const handleHwSubmit = async (e, hwId) => {
     e.preventDefault();
     if (!hwFile) return alert("Select a file first!");
@@ -138,7 +106,6 @@ function StudentDashboard() {
     }
   };
 
-  // Upload Payment Slip
   const handleSlipSubmit = async (e) => {
     e.preventDefault();
     if (!slipFile) return alert("Please select your bank slip!");
@@ -158,18 +125,15 @@ function StudentDashboard() {
     }
   };
 
- 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
 
-  
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-slate-800 font-sans">
       
-      {/* 1. Dribbble Style Sleek Sidebar */}
+      {/* 1. Sidebar */}
       <aside className="w-72 bg-white border-r border-slate-100 flex flex-col justify-between p-6">
         <div>
           <div className="flex items-center gap-3 px-2 py-4 mb-8">
@@ -182,20 +146,21 @@ function StudentDashboard() {
 
           <nav className="space-y-1">
             {[
-               // Sidebar tabs map එක ඇතුලට මෙය දාන්න:
-                { id: 'dashboard', label: 'Overview', icon: BookOpen },
-                { id: 'papers', label: 'Class Papers', icon: FileText },
-                { id: 'homeworks', label: 'Homeworks', icon: Clock },
-                { id: 'periodic', label: 'Periodic Table', icon: Beaker }, 
-                { id: 'fees', label: 'Class Fees', icon: CreditCard },
-
+              { id: 'dashboard', label: 'Overview', icon: BookOpen },
+              { id: 'papers', label: 'Class Papers', icon: FileText },
+              { id: 'homeworks', label: 'Homeworks', icon: Clock },
+              { id: 'periodic', label: 'Periodic Table', icon: Beaker },
+              { id: 'fees', label: 'Class Fees', icon: CreditCard },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (item.id === 'papers') setPapersSubView('categories'); // tab එක මාරු කරද්දී papers sub-view එක reset කරනවා
+                  }}
                   className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive 
                       ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-indigo-100' 
@@ -287,11 +252,32 @@ function StudentDashboard() {
                 </div>
               </div>
 
- 
               {/* Right Column (Sidebar Widgets) */}
               <div className="space-y-8">
                 
-                {/* 1. Leaderboard Widget */}
+                {/* 1. Badges Widget */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <h3 className="font-extrabold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-indigo-500 animate-bounce" /> Your Achievements
+                  </h3>
+                  {badges.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      {badges.map((b, idx) => (
+                        <div key={idx} className="bg-gradient-to-tr from-amber-50 to-orange-50 border border-amber-100 p-3 rounded-2xl flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-lg font-black text-amber-600">🏅</div>
+                          <div>
+                            <h5 className="font-bold text-xs text-slate-800">{b.badge_name}</h5>
+                            <span className="text-[9px] text-slate-400 block">{b.badge_desc}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-xs">No badges awarded yet. Scored 95%+ on any test to earn your first badge! ⚡</p>
+                  )}
+                </div>
+
+                {/* 2. Leaderboard Widget */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                   <h3 className="font-extrabold text-lg text-slate-800 mb-4 flex items-center gap-2">
                     <Award className="w-5 h-5 text-indigo-500" /> Leaderboard
@@ -317,7 +303,7 @@ function StudentDashboard() {
                   )}
                 </div>
 
-                {/* 2. Notice Board Widget */}
+                {/* 3. Notice Board Widget */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                   <h3 className="font-extrabold text-lg text-slate-800 mb-4 flex items-center gap-2">
                     <Bell className="w-5 h-5 text-indigo-500" /> Announcements
@@ -340,29 +326,162 @@ function StudentDashboard() {
             </div>
           )}
 
-          {/* TAB: CLASS PAPERS */}
+          {/* TAB: CLASS PAPERS (PREMIUM SUB-PAGES BOX UX) */}
           {activeTab === 'papers' && (
             <div>
-              <h3 className="text-2xl font-extrabold text-slate-800 mb-2">Class Papers</h3>
-              <p className="text-slate-400 text-sm mb-6">Download your Past papers and Model papers</p>
               
-              {papers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {papers.map(paper => (
-                    <div key={paper.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+              {/* PAGE VIEW 1: CATEGORIES (BOXES VIEW) */}
+              {papersSubView === 'categories' && (
+                <div>
+                  <h3 className="text-2xl font-extrabold text-slate-800 mb-2">Class Papers</h3>
+                  <p className="text-slate-400 text-sm mb-8">අදාළ ප්‍රශ්න පත්‍ර ගොනුව තෝරාගන්න.</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
+                    
+                    {/* BOX 1: SCHOOL PAPERS */}
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory('school_paper');
+                        setPapersSubView('terms');
+                      }}
+                      className="group bg-gradient-to-br from-teal-500 to-emerald-600 text-white p-8 rounded-[32px] text-left hover:scale-[1.03] transition-all duration-300 shadow-lg shadow-teal-500/10 flex flex-col justify-between h-52 relative overflow-hidden"
+                    >
+                      <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 font-bold select-none">🏫</div>
+                      <span className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-xl font-bold">🏫</span>
                       <div>
-                        <span className="inline-block px-3 py-1 bg-violet-50 text-violet-600 text-xs font-bold rounded-full mb-3">{paper.paper_type === 'past_paper' ? 'Past Paper' : 'Model Paper'}</span>
-                        <h4 className="font-extrabold text-lg text-slate-700 mb-4">{paper.title}</h4>
+                        <h4 className="text-xl font-black mb-1">School Papers</h4>
+                        <span className="text-xs text-teal-100 font-semibold flex items-center gap-1">පාසල් වාර පරීක්ෂණ <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" /></span>
                       </div>
-                      <button onClick={() => handleDownload(paper.file_url, paper.title)} className="w-full bg-slate-50 hover:bg-violet-50 hover:text-violet-600 text-slate-500 font-bold py-2.5 rounded-2xl flex items-center justify-center gap-2 transition">
-                        <Download className="w-4 h-4" /> Download PDF
+                    </button>
+
+                    {/* BOX 2: PROVINCIAL PAPERS */}
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory('provincial_paper');
+                        setPapersSubView('terms');
+                      }}
+                      className="group bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-8 rounded-[32px] text-left hover:scale-[1.03] transition-all duration-300 shadow-lg shadow-indigo-500/10 flex flex-col justify-between h-52 relative overflow-hidden"
+                    >
+                      <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 font-bold select-none">🗺️</div>
+                      <span className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-xl font-bold">🗺️</span>
+                      <div>
+                        <h4 className="text-xl font-black mb-1">Provincial Papers</h4>
+                        <span className="text-xs text-sky-100 font-semibold flex items-center gap-1">පළාත් ප්‍රශ්න පත්‍ර <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" /></span>
+                      </div>
+                    </button>
+
+                    {/* BOX 3: PAST PAPERS (ONLY VISIBLE TO GRADE 11) */}
+                    {studentGrade === 11 ? (
+                      <button 
+                        onClick={() => {
+                          setSelectedCategory('past_paper');
+                          setSelectedTerm(null); // Past papers don't have terms
+                          setPapersSubView('list'); // Skip terms view and go directly to list
+                        }}
+                        className="group bg-gradient-to-br from-violet-600 to-purple-800 text-white p-8 rounded-[32px] text-left hover:scale-[1.03] transition-all duration-300 shadow-lg shadow-purple-500/10 flex flex-col justify-between h-52 relative overflow-hidden"
+                      >
+                        <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 font-bold select-none">🎓</div>
+                        <span className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-xl font-bold">🎓</span>
+                        <div>
+                          <h4 className="text-xl font-black mb-1">O/L Past Papers</h4>
+                          <span className="text-xs text-violet-100 font-semibold flex items-center gap-1">පසුგිය විභාග පත්‍ර <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" /></span>
+                        </div>
                       </button>
-                    </div>
-                  ))}
+                    ) : (
+                      <div className="bg-slate-100 border border-slate-200/50 p-8 rounded-[32px] flex flex-col justify-center items-center h-52 text-center text-slate-400">
+                        <span className="text-2xl mb-1">🔒</span>
+                        <h4 className="font-bold text-sm text-slate-500">Past Papers locked</h4>
+                        <p className="text-[10px] max-w-xs mt-1">O/L Past papers are available only for Grade 11 students.</p>
+                      </div>
+                    )}
+
+                  </div>
                 </div>
-              ) : (
-                <div className="bg-white p-12 rounded-3xl text-center text-slate-400 border border-dashed">No papers uploaded for your grade yet.</div>
               )}
+
+              {/* PAGE VIEW 2: TERMS SELECTION (1, 2, 3 TERM BOXES) */}
+              {papersSubView === 'terms' && (
+                <div>
+                  {/* Breadcrumb / Back button */}
+                  <button 
+                    onClick={() => setPapersSubView('categories')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 mb-6 bg-indigo-50 px-4 py-2 rounded-full transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to Categories
+                  </button>
+
+                  <h3 className="text-2xl font-extrabold text-slate-800 mb-2 uppercase tracking-wide">
+                    {selectedCategory === 'school_paper' ? 'School Papers' : 'Provincial Papers'}
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-8">අවශ්‍ය වාර විභාගය තෝරාගන්න (Select Term)</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+                    {[1, 2, 3].map(termNum => {
+                      const count = papers.filter(p => p.category === selectedCategory && p.term === termNum).length;
+                      return (
+                        <button 
+                          key={termNum}
+                          onClick={() => {
+                            setSelectedTerm(termNum);
+                            setPapersSubView('list');
+                          }}
+                          className="group bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-500/30 text-left transition flex flex-col justify-between h-44"
+                        >
+                          <span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-sm">0{termNum}</span>
+                          <div>
+                            <h4 className="font-extrabold text-slate-800 text-lg mb-0.5">{termNum} වාරය</h4>
+                            <span className="text-xs text-slate-400 font-semibold">{count} papers available</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* PAGE VIEW 3: PAPERS DOWNLOAD LIST */}
+              {papersSubView === 'list' && (
+                <div>
+                  {/* Dynamic Back Button based on category */}
+                  <button 
+                    onClick={() => {
+                      if (selectedCategory === 'past_paper') {
+                        setPapersSubView('categories');
+                      } else {
+                        setPapersSubView('terms');
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 mb-6 bg-indigo-50 px-4 py-2 rounded-full transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> {selectedCategory === 'past_paper' ? 'Back to Categories' : 'Back to Terms'}
+                  </button>
+
+                  <h3 className="text-2xl font-extrabold text-slate-800 mb-2 uppercase tracking-wide">
+                    {selectedCategory === 'past_paper' ? 'O/L Past Papers' : selectedCategory === 'school_paper' ? `School Papers - ${selectedTerm} Term` : `Provincial Papers - ${selectedTerm} Term`}
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-8">අවශ්‍ය ප්‍රශ්න පත්‍රය බාගත කරගන්න (Download Papers)</p>
+
+                  {/* List View Grid */}
+                  {papers.filter(p => p.category === selectedCategory && (selectedCategory === 'past_paper' ? true : p.term === selectedTerm)).length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+                      {papers.filter(p => p.category === selectedCategory && (selectedCategory === 'past_paper' ? true : p.term === selectedTerm)).map(paper => (
+                        <div key={paper.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between h-40">
+                          <h4 className="font-extrabold text-slate-800 leading-snug">{paper.title}</h4>
+                          <button 
+                            onClick={() => handleDownload(paper.file_url, paper.title)}
+                            className="w-full bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 font-extrabold py-2.5 rounded-2xl flex items-center justify-center gap-2 transition text-xs border border-slate-100"
+                          >
+                            <Download className="w-4 h-4" /> Download PDF File
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white p-12 rounded-3xl text-center text-slate-400 border border-dashed max-w-4xl">මෙම අංශය සඳහා ප්‍රශ්න පත්‍ර තවම ඇතුලත් කර නැත.</div>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
 
@@ -374,43 +493,74 @@ function StudentDashboard() {
 
               {homeworks.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {homeworks.map(hw => (
-                    <div key={hw.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-4">
-                          <h4 className="font-extrabold text-lg text-slate-700">{hw.title}</h4>
-                          <HomeworkTimer deadline={hw.deadline} />
-                        </div>
-                        <p className="text-slate-500 text-sm mb-4 leading-relaxed">{hw.description}</p>
-                      </div>
+                  {homeworks.map(hw => {
+                    const [days, setDays] = useState('');
+                    const [hours, setHours] = useState('');
+                    const [mins, setMins] = useState('');
+                    const [isExpired, setIsExpired] = useState(false);
 
-                      {/* Upload Homework Form */}
-                      <div className="border-t border-slate-50 pt-4 mt-4">
-                        {hw.is_submitted ? (
-                          <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-2xl">
-                            <span className="text-xs text-emerald-700 font-bold flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Handed In</span>
-                            {hw.marks !== null && <span className="text-sm font-extrabold text-emerald-700">Marks: {hw.marks}/100</span>}
+                    useEffect(() => {
+                      const interval = setInterval(() => {
+                        const diff = +new Date(hw.deadline) - +new Date();
+                        if (diff <= 0) {
+                          setIsExpired(true);
+                          clearInterval(interval);
+                        } else {
+                          setDays(Math.floor(diff / (1000 * 60 * 60 * 24)));
+                          setHours(Math.floor((diff / (1000 * 60 * 60)) % 24));
+                          setMins(Math.floor((diff / 1000 / 60) % 60));
+                        }
+                      }, 1000);
+                      return () => clearInterval(interval);
+                    }, [hw.deadline]);
+
+                    return (
+                      <div key={hw.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-4">
+                            <h4 className="font-extrabold text-lg text-slate-700">{hw.title}</h4>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isExpired ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>
+                              <Clock className="w-3.5 h-3.5" />
+                              {isExpired ? 'Expired' : `${days}d ${hours}h ${mins}m`}
+                            </span>
                           </div>
-                        ) : uploadingHwId === hw.id ? (
-                          <form onSubmit={(e) => handleHwSubmit(e, hw.id)} className="space-y-3">
-                            <input type="file" className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" onChange={e => setHwFile(e.target.files[0])} required />
-                            <div className="flex gap-2">
-                              <button type="submit" className="bg-indigo-600 text-white font-bold text-xs px-4 py-2 rounded-xl">Submit</button>
-                              <button onClick={() => setUploadingHwId(null)} className="bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2 rounded-xl">Cancel</button>
+                          <p className="text-slate-500 text-sm mb-4 leading-relaxed">{hw.description}</p>
+                        </div>
+
+                        <div className="border-t border-slate-50 pt-4 mt-4">
+                          {hw.is_submitted ? (
+                            <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-2xl">
+                              <span className="text-xs text-emerald-700 font-bold flex items-center gap-1.5"><CheckCircle className="w-4 h-4" /> Handed In</span>
+                              {hw.marks !== null && <span className="text-sm font-extrabold text-emerald-700">Marks: {hw.marks}/100</span>}
                             </div>
-                          </form>
-                        ) : (
-                          <button onClick={() => setUploadingHwId(hw.id)} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-2xl flex items-center justify-center gap-2 transition">
-                            <Send className="w-4 h-4" /> Hand In Homework
-                          </button>
-                        )}
+                          ) : uploadingHwId === hw.id ? (
+                            <form onSubmit={(e) => handleHwSubmit(e, hw.id)} className="space-y-3">
+                              <input type="file" className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" onChange={e => setHwFile(e.target.files[0])} required />
+                              <div className="flex gap-2">
+                                <button type="submit" className="bg-indigo-600 text-white font-bold text-xs px-4 py-2 rounded-xl">Submit</button>
+                                <button onClick={() => setUploadingHwId(null)} className="bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2 rounded-xl">Cancel</button>
+                              </div>
+                            </form>
+                          ) : (
+                            <button onClick={() => setUploadingHwId(hw.id)} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-2xl flex items-center justify-center gap-2 transition">
+                              <Send className="w-4 h-4" /> Hand In Homework
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="bg-white p-12 rounded-3xl text-center text-slate-400 border border-dashed">No homework assigned yet. Enjoy!</div>
               )}
+            </div>
+          )}
+
+          {/* TAB: PERIODIC TABLE */}
+          {activeTab === 'periodic' && (
+            <div className="p-2">
+              <PeriodicTable />
             </div>
           )}
 
@@ -437,12 +587,6 @@ function StudentDashboard() {
               </div>
             </div>
           )}
-
-          
-            {/* TAB: PERIODIC TABLE (NEW) */}
-            {activeTab === 'periodic' && (
-              <PeriodicTable />
-            )}
 
         </div>
       </main>

@@ -130,7 +130,7 @@ function PeriodicTable() {
               </div>
 
               <div className="mt-6 text-[10px] text-slate-500 italic text-center">
-                Denuwan Karunarathna Science LMS Tool
+                Denuwan Karunarathna Science 
               </div>
             </div>
           )}

@@ -22,6 +22,8 @@ function AdminDashboard() {
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
   const navigate = useNavigate();
+  const [category, setCategory] = useState('school_paper'); // school_paper, provincial_paper, past_paper
+  const [term, setTerm] = useState(1); // 1, 2, 3
 
   useEffect(() => {
     fetchPendingStudents();
@@ -62,7 +64,9 @@ function AdminDashboard() {
     formData.append('grade', grade);
     formData.append('paperType', paperType);
     formData.append('paperFile', paperFile);
-
+    formData.append('category', category); // paperType වෙනුවට category එකතු කළා
+    formData.append('term', term);         // term එකතු කළා
+    
     try {
       await axios.post('http://localhost:5001/api/admin/upload-paper', formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
@@ -229,14 +233,16 @@ function AdminDashboard() {
         )}
 
         {/* TAB: UPLOAD PAPER */}
+           {/* TAB: UPLOAD PAPER (UPDATED FOR TERMS & CATEGORIES) */}
         {activeTab === 'papers' && (
           <div className="max-w-xl bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
             <h3 className="text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2"><PlusCircle className="text-emerald-500" /> Upload Paper</h3>
             <form onSubmit={handlePaperUpload} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Paper Title</label>
-                <input type="text" className="w-full p-3 border rounded-xl" placeholder="e.g., Grade 9 Science Term 1" onChange={e => setTitle(e.target.value)} value={title} required />
+                <input type="text" className="w-full p-3 border rounded-xl" placeholder="e.g., Colombo Ananda College Term 1" onChange={e => setTitle(e.target.value)} value={title} required />
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Target Grade</label>
@@ -245,13 +251,27 @@ function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Paper Type</label>
-                  <select className="w-full p-3 border rounded-xl" onChange={e => setPaperType(e.target.value)} value={paperType}>
-                    <option value="past_paper">Past Paper</option>
-                    <option value="model_paper">Model Paper</option>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Paper Category</label>
+                  <select className="w-full p-3 border rounded-xl" onChange={e => setCategory(e.target.value)} value={category}>
+                    <option value="school_paper">School Paper (පාසල් පේපර්)</option>
+                    <option value="provincial_paper">Provincial Paper (පළාත් පේපර්)</option>
+                    <option value="past_paper">Past Paper (පසුගිය විභාග පේපර් - Grade 11 Only)</option>
                   </select>
                 </div>
               </div>
+
+              {/* Past Paper නොවන ඕනෑම එකකට වාරය (Term) තෝරන්න දීම */}
+              {category !== 'past_paper' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Select Term (වාරය)</label>
+                  <select className="w-full p-3 border rounded-xl" onChange={e => setTerm(parseInt(e.target.value))} value={term}>
+                    <option value={1}>1 වාරය (1st Term)</option>
+                    <option value={2}>2 වාරය (2nd Term)</option>
+                    <option value={3}>3 වාරය (3rd Term)</option>
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Upload File (PDF)</label>
                 <input type="file" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onChange={e => setPaperFile(e.target.files[0])} required />
